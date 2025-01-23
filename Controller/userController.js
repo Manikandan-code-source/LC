@@ -1,6 +1,8 @@
 const User = require('../Models/UserModel');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
-const PostUser = async (req, res) => {
+const RegisterUser = async (req, res) => {
     const { name, email, password, role } = req.body;
     if (!name || !email || !password) {
         return res.status(400).json({ message: "Required Details are Missing" });
@@ -12,16 +14,21 @@ const PostUser = async (req, res) => {
                     message: "User Already Exsist"
                 });
             }
+            const hashedPassword = await bcrypt.hash(password, 12);
             const newUser = new User({
                 name,
                 email,
-                password,
+                password: hashedPassword,
                 role
             });
             await newUser.save();
+            const token = jwt.sign({
+                _id: newUser._id
+            }, 'secretkey123', { expiresIn: '1d' });
             res.status(200).json({
                 user: { name: newUser.name, email: newUser.email, role: newUser.role },
-                message: "New User has been saved Successfully"
+                message: "New User has been saved Successfully",
+                token
             })
         } catch (error) {
             res.status(500).json({
@@ -30,6 +37,46 @@ const PostUser = async (req, res) => {
         }
     }
 }
+
+const LoginUser = async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({
+            message: "Email or Password is Missing"
+        })
+    } else {
+        try {
+            const user = await User.findOne({ email });
+            if (!user) {
+                res.status(404).json({
+                    message: "User Not Found"
+                });
+            } else {
+                const isPasswordValid = await bcrypt.compare(password, user.password);
+                const token = jwt.sign({
+                    _id: user._id
+                }, 'secretkey123', { expiresIn: '1d' });
+                if (!isPasswordValid) {
+                    res.status(401).json({
+                        message: "Password is Incorrect"
+                    })
+                } else {
+                    res.status(200).json({
+                        message: "Login Successful",
+                        user,
+                        token
+                    })
+                }
+            }
+        } catch (error) {
+            console.error(error.message);
+            res.status(500).json({
+                message: "Something went wrong"
+            });
+        }
+    }
+}
+
 
 const GetUser = async (req, res) => {
     try {
@@ -53,8 +100,6 @@ const GetUser = async (req, res) => {
 
 const GetUserByID = async (req, res) => {
     const { userId } = req.params;
-    console.log(userId);
-
     if (!userId) {
         return res.status(400).json({ message: "User ID is required" });
     }
@@ -140,9 +185,6 @@ const SearchUser = async (req, res) => {
                 $options: 'i'
             }
         }
-        console.log(filter);
-        
-
         const searchUser = await User.find(filter);
         if (searchUser.length > 0) {
             res.status(200).json({
@@ -163,4 +205,4 @@ const SearchUser = async (req, res) => {
     }
 }
 
-module.exports = { PostUser, GetUser, UpdateUser, DeleteUserByID, GetUserByID, SearchUser };
+module.exports = { RegisterUser, GetUser, UpdateUser, DeleteUserByID, GetUserByID, SearchUser, LoginUser };
