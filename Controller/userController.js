@@ -61,9 +61,14 @@ const LoginUser = async (req, res) => {
                         message: "Password is Incorrect"
                     })
                 } else {
+                    const userData = {
+                        name : user.name,
+                        email : user.email,
+                        role : user.role
+                    }                    
                     res.status(200).json({
                         message: "Login Successful",
-                        user,
+                        user : userData,
                         token
                     })
                 }
