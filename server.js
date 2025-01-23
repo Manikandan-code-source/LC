@@ -2,9 +2,11 @@ const express = require('express');
 const FileRouter = require('./Router/fileRouter');
 const UserRouter = require('./Router/userRouter');
 const Database = require('./Database/MongoDB');
+const Logger = require('./Custom_Middleware/logger')
 
 const app = express();
 app.use(express.json());
+app.use(Logger); //custome middleware
 app.use('/api/file', FileRouter);
 app.use('/api/user', UserRouter);
 require('dotenv').config();

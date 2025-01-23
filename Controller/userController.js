@@ -28,6 +28,7 @@ const RegisterUser = async (req, res) => {
             res.status(200).json({
                 user: { name: newUser.name, email: newUser.email, role: newUser.role },
                 message: "New User has been saved Successfully",
+                requestedAt : req.requestedAt,
                 token
             })
         } catch (error) {
@@ -69,6 +70,7 @@ const LoginUser = async (req, res) => {
                     res.status(200).json({
                         message: "Login Successful",
                         user : userData,
+                        requestedAt : req.requestedAt,
                         token
                     })
                 }
@@ -89,6 +91,7 @@ const GetUser = async (req, res) => {
         if (Users.length !== 0) {
             res.status(200).json({
                 Users: Users,
+                requestedAt : req.requestedAt,
                 message: "List of Users"
             })
         } else {
@@ -114,6 +117,7 @@ const GetUserByID = async (req, res) => {
         if (getUserByID) {
             res.status(200).json({
                 user: getUserByID,
+                requestedAt : req.requestedAt,
                 message: "User found successfully",
             });
         } else {
@@ -131,6 +135,7 @@ const UpdateUser = async (req, res) => {
     const updates = req.body;
     try {
         const updatedUser = await User.findByIdAndUpdate(
+            {requestedAt : req.requestedAt},
             userId,
             updates
         );
@@ -155,7 +160,8 @@ const DeleteUserByID = async (req, res) => {
                 });
             } else {
                 res.status(200).json({
-                    message: "User Deleted Successfully"
+                    message: "User Deleted Successfully",
+                    requestedAt : req.requestedAt,
                 });
             }
         } catch (error) {
@@ -194,6 +200,7 @@ const SearchUser = async (req, res) => {
         if (searchUser.length > 0) {
             res.status(200).json({
                 searchUser,
+                requestedAt : req.requestedAt,
                 message: "User Searched Successfully"
             })
         } else {
